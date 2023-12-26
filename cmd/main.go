@@ -32,6 +32,13 @@ func main() {
 		}
 		HandleDel(config, os.Args[2])
 		break
+	case "rm":
+		if len(os.Args) < 3 {
+			help()
+			return
+		}
+		HandleRemove(config, os.Args[2])
+		break
 	case "add-remote":
 		if len(os.Args) < 4 {
 			help()
@@ -70,8 +77,9 @@ func help() {
 	fmt.Println()
 	fmt.Println("Unit Managment:")
 	fmt.Println("    add <unit> <path>                add local unit")
-	fmt.Println("    del <unit>                       remove local unit")
 	fmt.Println("    add-remote <unit> <path>         add remote unit")
+	fmt.Println("    del <unit>                       remove local unit")
+	fmt.Println("    rm  <unit>                       remove local unit and its files (DANGEROUS!)")
 	fmt.Println("    list                             list local units")
 	fmt.Println("    list-remote                      list remote units")
 	fmt.Println("    fetch <unit>                     fetch unit")

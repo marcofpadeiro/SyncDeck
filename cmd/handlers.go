@@ -76,6 +76,33 @@ func HandleDel(config Config, unit_id string) {
 	fmt.Println("Unit " + unit_id + " deleted successfully!")
 }
 
+func HandleRemove(config Config, unit_id string) {
+	local_units, err := utils.GetUnits(config.Units_metadata)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	exists := utils.CheckExists(local_units, unit_id)
+	if exists == -1 {
+		fmt.Println(unit_id + " does not exist in local units!")
+		return
+	}
+
+	unit := local_units[exists]
+
+	var user_input string
+	fmt.Printf("Are you sure you want to delete all files from %s? [y/N] ", unit.Path)
+
+	fmt.Scanln(&user_input)
+
+	if user_input != "y" && user_input != "Y" {
+		return
+	}
+
+	HandleDel(config, unit_id)
+	os.RemoveAll(unit.Path)
+}
+
 func HandleAddRemote(config Config, unit_id string, folder_path string) {
 	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
 	if err != nil {
