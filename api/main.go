@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/marcofpadeiro/SyncDeck/helpers"
+	"github.com/marcofpadeiro/SyncDeck/utils"
 )
 
 func main() {
@@ -42,7 +42,7 @@ func getVersion(c *gin.Context) {
 		return
 	}
 
-	version, err := helpers.GetVersion(config.(Config).Save_path+"/metadata.json", id)
+	version, err := utils.GetVersion(config.(Config).Save_path+"/metadata.json", id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -86,8 +86,8 @@ func upload(c *gin.Context) {
 
 	temp := strings.Split(handler.Filename, ".")
 	unit_id := temp[0]
-	units, err := helpers.GetUnits(config.(Config).Save_path + "/metadata.json")
-	helpers.MarshallJson(config.(Config).Save_path+"/metadata.json", units)
+	units, err := utils.GetUnits(config.(Config).Save_path + "/metadata.json")
+	utils.MarshallJson(config.(Config).Save_path+"/metadata.json", units)
 
 	// Create a new file on the server
 	outFile, err := os.Create(filepath.Join(config.(Config).Save_path, handler.Filename))
@@ -104,16 +104,16 @@ func upload(c *gin.Context) {
 		return
 	}
 
-	exist := helpers.CheckExists(units, unit_id)
+	exist := utils.CheckExists(units, unit_id)
 	if exist != -1 {
 		units[exist].Version++
-		err = helpers.MarshallJson(config.(Config).Save_path+"/metadata.json", units)
+		err = utils.MarshallJson(config.(Config).Save_path+"/metadata.json", units)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 	} else {
-		err = helpers.AddUnit(config.(Config).Save_path+"/metadata.json", helpers.Unit{ID: unit_id, Version: 1})
+		err = utils.AddUnit(config.(Config).Save_path+"/metadata.json", utils.Unit{ID: unit_id, Version: 1})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -130,7 +130,7 @@ func getUnits(c *gin.Context) {
 		return
 	}
 
-	units, err := helpers.GetUnits(config.(Config).Save_path + "/metadata.json")
+	units, err := utils.GetUnits(config.(Config).Save_path + "/metadata.json")
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return

@@ -1,4 +1,4 @@
-package helpers
+package utils
 
 import (
 	"archive/zip"
@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-func ZipFolder(folderPath string) (*bytes.Buffer, error) {
+func Compress(folderPath string) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 	zipWriter := zip.NewWriter(&buf)
 
@@ -65,7 +65,7 @@ func ZipFolder(folderPath string) (*bytes.Buffer, error) {
 	return &buf, nil
 }
 
-func UnzipFolder(zipPath, destPath string) error {
+func Extract(zipPath, destPath string) error {
 	r, err := zip.OpenReader(zipPath)
 	if err != nil {
 		return err
