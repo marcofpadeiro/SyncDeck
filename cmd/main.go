@@ -21,24 +21,38 @@ func main() {
 	case "add":
 		if len(os.Args) < 4 {
 			help()
+			return
 		}
 		HandleAdd(config, os.Args[2], os.Args[3])
+		break
 	case "del":
 		if len(os.Args) < 3 {
 			help()
+			return
 		}
 		HandleDel(config, os.Args[2])
+		break
 	case "add-remote":
 		if len(os.Args) < 4 {
 			help()
+			return
 		}
 		HandleAddRemote(config, os.Args[2], os.Args[3])
+		break
 	case "list":
 		HandleList(config)
+		break
 	case "fetch":
+		if len(os.Args) < 3 {
+			help()
+			return
+		}
+		HandleFetch(config, os.Args[2])
+		break
 	case "upload":
 	default:
 		help()
+		return
 	}
 }
 
@@ -55,7 +69,6 @@ func help() {
 	fmt.Println("    add-remote <unit> <path>         add remote unit")
 	fmt.Println("    list                             list local units")
 	fmt.Println("    list-remote                      list remote units")
-	fmt.Println("    fetch                            fetch all units")
 	fmt.Println("    fetch <unit>                     fetch unit")
 	fmt.Println("    upload <unit>                    upload into server")
 }

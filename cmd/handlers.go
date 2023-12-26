@@ -97,7 +97,11 @@ func HandleList(config Config) {
 		fmt.Printf("%s v%d\t-> %s\n", unit.ID, local.Version, local.Path)
 	}
 }
-func HandleFetch(config Config) {
+func HandleFetch(config Config, unit_id string) {
+
 }
 func HandleUpload(config Config) {
+}
+
+func getRemoteVersion(config Config, unit_id string) {
 }

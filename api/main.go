@@ -25,6 +25,7 @@ func main() {
 		c.Next()
 	})
 
+	router.GET("/download/:id", download)
 	router.GET("/version/:id", getVersion)
 	router.GET("/units", getUnits)
 	router.POST("/createUnit", createUnit)
@@ -43,11 +44,23 @@ func getVersion(c *gin.Context) {
 
 	version, err := helpers.GetVersion(config.(Config).Save_path+"/metadata.json", id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"version": version})
+}
+
+func download(c *gin.Context) {
+	id := c.Param("id")
+
+	config, exists := c.Get("config")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Config not found"})
+		return
+	}
+
+	c.File(config.(Config).Save_path + "/" + id + ".zip")
 }
 
 func getUnits(c *gin.Context) {
@@ -58,9 +71,8 @@ func getUnits(c *gin.Context) {
 	}
 
 	units, err := helpers.GetUnits(config.(Config).Save_path + "/metadata.json")
-
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
