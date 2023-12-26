@@ -1,4 +1,4 @@
-package helpers
+package main
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-const CONFIG_PATH = "../configs/config.json"
+const CONFIG_PATH = "../configs/server.json"
 
 type Config struct {
 	Save_path    string
