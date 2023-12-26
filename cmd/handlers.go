@@ -228,3 +228,45 @@ func HandleUpload(config Config, unit_id string) {
 
 	fmt.Println("Successfully uploaded " + unit_id + " to remote")
 }
+
+func HandleRefresh(config Config) {
+	local_units, err := utils.GetUnits(config.Units_metadata)
+	if err != nil {
+		log.Panic(err)
+	}
+	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	for _, local := range local_units {
+		index := utils.CheckExists(remote_units, local.ID)
+		if index == -1 {
+			log.Panic("Should exist but does not wtf")
+		}
+		remote := remote_units[index]
+		if local.Version < remote.Version {
+			fmt.Printf("%s is outdated! (v%d->v%d)\n", local.ID, local.Version, remote.Version)
+			URL := "http://" + config.IP + ":" + config.Port + "/download/" + local.ID
+			path := filepath.Join("/tmp", local.ID+".zip")
+			err = utils.Download(URL, path)
+			if err != nil {
+				log.Panic(err.Error())
+			}
+
+			os.RemoveAll(local.Path)
+			err = utils.Extract(path, local.Path)
+			if err != nil {
+				fmt.Println("Error extracting file:", err)
+				return
+			}
+
+			utils.UpdateUnit(config.Units_metadata, local, remote.Version)
+		} else if local.Version > remote.Version {
+			HandleUpload(config, local.ID)
+			fmt.Printf("%s is ahead of server! (v%d->v%d)\n", local.ID, local.Version, remote.Version)
+		} else {
+			fmt.Printf("%s is up to date! (v%d)\n", local.ID, local.Version)
+		}
+	}
+}

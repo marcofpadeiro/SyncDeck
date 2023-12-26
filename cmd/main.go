@@ -62,6 +62,8 @@ func main() {
 			return
 		}
 		HandleUpload(config, os.Args[2])
+	case "refresh":
+		HandleRefresh(config)
 	default:
 		help()
 		return
@@ -84,4 +86,5 @@ func help() {
 	fmt.Println("    list-remote                      list remote units")
 	fmt.Println("    fetch <unit>                     fetch unit")
 	fmt.Println("    upload <unit>                    upload into server")
+	fmt.Println("    refresh                          refresh all units versions")
 }
