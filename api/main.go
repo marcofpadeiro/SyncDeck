@@ -13,6 +13,8 @@ import (
 )
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
+
 	config, err := ReadConfig()
 	if err != nil {
 		log.Panic("Error reading config")
@@ -30,7 +32,7 @@ func main() {
 	router.GET("/version/:id", getVersion)
 	router.GET("/units", getUnits)
 
-	router.Run("localhost:5137")
+	router.Run(config.IP + ":" + config.Port)
 }
 
 func getVersion(c *gin.Context) {

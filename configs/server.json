@@ -1,4 +1,6 @@
 {
+    "server_ip": "127.0.0.1",
+    "server_port": "5137",
     "save_path": "/home/marco/syncdeck",
     "history_size": 3
 }
