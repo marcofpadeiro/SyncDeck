@@ -68,7 +68,8 @@ func HandleAddRemote(config Config, unit_id string, folder_path string) {
 	}
 
 	if helpers.CheckExists(remote_units, unit_id) != -1 {
-		log.Panic("Already exists")
+		fmt.Println("Already exists")
+		return
 	}
 
 	URL := "http://" + config.IP + ":" + config.Port + "/upload"
@@ -103,14 +104,37 @@ func HandleList(config Config) {
 		if exists != -1 {
 			local = units[exists]
 		}
-		fmt.Printf("%s v%d\t-> %s\n", unit.ID, local.Version, local.Path)
+		fmt.Printf("%s v%d|v%d \t-> %s\n", unit.ID, local.Version, unit.Version, local.Path)
 	}
 }
+
 func HandleFetch(config Config, unit_id string) {
 
 }
-func HandleUpload(config Config) {
-}
 
-func getRemoteVersion(config Config, unit_id string) {
+func HandleUpload(config Config, unit_id string) {
+	local_units, err := helpers.GetUnits(config.Units_metadata)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	exists := helpers.CheckExists(local_units, unit_id)
+	if exists == -1 {
+		fmt.Println("You are not subscribed to that unit!")
+		return
+	}
+
+	URL := "http://" + config.IP + ":" + config.Port + "/upload"
+
+	zipData, err := helpers.ZipFolder(local_units[exists].Path)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	err = helpers.SendZipFile(zipData, URL, unit_id)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Println("Successfully uploaded " + unit_id + " to remote")
 }
