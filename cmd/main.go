@@ -50,6 +50,11 @@ func main() {
 		HandleFetch(config, os.Args[2])
 		break
 	case "upload":
+		if len(os.Args) < 3 {
+			help()
+			return
+		}
+		HandleUpload(config, os.Args[2])
 	default:
 		help()
 		return

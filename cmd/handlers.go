@@ -62,7 +62,16 @@ func HandleDel(config Config, unit_id string) {
 }
 
 func HandleAddRemote(config Config, unit_id string, folder_path string) {
-	URL := "http://" + config.IP + ":" + config.Port + "/createUnit"
+	remote_units, err := helpers.GetRemoteUnits(config.IP, config.Port)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	if helpers.CheckExists(remote_units, unit_id) != -1 {
+		log.Panic("Already exists")
+	}
+
+	URL := "http://" + config.IP + ":" + config.Port + "/upload"
 
 	zipData, err := helpers.ZipFolder(folder_path)
 	if err != nil {

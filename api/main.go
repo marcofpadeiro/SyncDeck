@@ -25,10 +25,10 @@ func main() {
 		c.Next()
 	})
 
+	router.POST("/upload", upload)
 	router.GET("/download/:id", download)
 	router.GET("/version/:id", getVersion)
 	router.GET("/units", getUnits)
-	router.POST("/createUnit", createUnit)
 
 	router.Run("localhost:5137")
 }
@@ -63,23 +63,7 @@ func download(c *gin.Context) {
 	c.File(config.(Config).Save_path + "/" + id + ".zip")
 }
 
-func getUnits(c *gin.Context) {
-	config, exists := c.Get("config")
-	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Config not found"})
-		return
-	}
-
-	units, err := helpers.GetUnits(config.(Config).Save_path + "/metadata.json")
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, units)
-}
-
-func createUnit(c *gin.Context) {
+func upload(c *gin.Context) {
 	config, exists := c.Get("config")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Config not found"})
@@ -103,10 +87,7 @@ func createUnit(c *gin.Context) {
 	temp := strings.Split(handler.Filename, ".")
 	unit_id := temp[0]
 	units, err := helpers.GetUnits(config.(Config).Save_path + "/metadata.json")
-	if helpers.CheckExists(units, unit_id) != -1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Already exists"})
-		return
-	}
+	helpers.MarshallJson(config.(Config).Save_path+"/metadata.json", units)
 
 	// Create a new file on the server
 	outFile, err := os.Create(filepath.Join(config.(Config).Save_path, handler.Filename))
@@ -123,12 +104,37 @@ func createUnit(c *gin.Context) {
 		return
 	}
 
-	err = helpers.AddUnit(config.(Config).Save_path+"/metadata.json", helpers.Unit{ID: unit_id, Version: 1})
+	exist := helpers.CheckExists(units, unit_id)
+	if exist != -1 {
+		units[exist].Version++
+		err = helpers.MarshallJson(config.(Config).Save_path+"/metadata.json", units)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		err = helpers.AddUnit(config.(Config).Save_path+"/metadata.json", helpers.Unit{ID: unit_id, Version: 1})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
 
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	c.JSON(http.StatusOK, gin.H{"message": "Unit uploaded successfully"})
+}
+
+func getUnits(c *gin.Context) {
+	config, exists := c.Get("config")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Config not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Unit added successfully"})
+	units, err := helpers.GetUnits(config.(Config).Save_path + "/metadata.json")
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, units)
 }
