@@ -6,9 +6,10 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
 )
 
-func SendZipFile(zipData *bytes.Buffer, endpoint, unit_id string) error {
+func Upload(zipData *bytes.Buffer, endpoint, unit_id string) error {
 	var requestBody bytes.Buffer
 	multipartWriter := multipart.NewWriter(&requestBody)
 
@@ -40,4 +41,21 @@ func SendZipFile(zipData *bytes.Buffer, endpoint, unit_id string) error {
 	}
 
 	return nil
+}
+
+func Download(endpoint, path string) error {
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	out, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return err
 }

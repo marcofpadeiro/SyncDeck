@@ -64,3 +64,38 @@ func ZipFolder(folderPath string) (*bytes.Buffer, error) {
 
 	return &buf, nil
 }
+
+func UnzipFolder(zipPath, destPath string) error {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	for _, file := range r.File {
+		rc, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer rc.Close()
+
+		filePath := filepath.Join(destPath, file.Name)
+
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(filePath, os.ModePerm)
+		} else {
+			os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
+			outFile, err := os.Create(filePath)
+			if err != nil {
+				return err
+			}
+			defer outFile.Close()
+
+			_, err = io.Copy(outFile, rc)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

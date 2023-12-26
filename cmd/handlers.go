@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/marcofpadeiro/SyncDeck/helpers"
 )
@@ -79,7 +81,7 @@ func HandleAddRemote(config Config, unit_id string, folder_path string) {
 		log.Panic(err)
 	}
 
-	err = helpers.SendZipFile(zipData, URL, unit_id)
+	err = helpers.Upload(zipData, URL, unit_id)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -109,7 +111,55 @@ func HandleList(config Config) {
 }
 
 func HandleFetch(config Config, unit_id string) {
+	URL := "http://" + config.IP + ":" + config.Port + "/download/" + unit_id
+	local_units, err := helpers.GetUnits(config.Units_metadata)
+	if err != nil {
+		log.Panic(err)
+	}
+	remote_units, err := helpers.GetRemoteUnits(config.IP, config.Port)
+	if err != nil {
+		log.Panic(err)
+	}
 
+	index := helpers.CheckExists(local_units, unit_id)
+	if index == -1 {
+		fmt.Println("You are not subscribed to that " + unit_id)
+		return
+	}
+
+	local := local_units[index]
+
+	index = helpers.CheckExists(remote_units, unit_id)
+	if index == -1 {
+		fmt.Println("Unit " + unit_id + " does not exist in remote")
+		return
+	}
+
+	remote := remote_units[index]
+
+	if local.Version < remote.Version {
+		path := filepath.Join("/tmp", local.ID+".zip")
+		err = helpers.Download(URL, path)
+		if err != nil {
+			log.Panic(err.Error())
+		}
+		fmt.Println("Successfully downloaded to " + path)
+
+		// Unzip the downloaded file
+		os.RemoveAll(local.Path)
+		err = helpers.UnzipFolder(path, local.Path)
+		if err != nil {
+			fmt.Println("Error extracting file:", err)
+			return
+		}
+		fmt.Println("File extracted successfully")
+
+		helpers.UpdateUnit(config.Units_metadata, local, remote.Version)
+		fmt.Println("Updated metadata file")
+
+	} else if local.Version > remote.Version {
+		HandleUpload(config, unit_id)
+	}
 }
 
 func HandleUpload(config Config, unit_id string) {
@@ -131,7 +181,7 @@ func HandleUpload(config Config, unit_id string) {
 		log.Panic(err)
 	}
 
-	err = helpers.SendZipFile(zipData, URL, unit_id)
+	err = helpers.Upload(zipData, URL, unit_id)
 	if err != nil {
 		log.Panic(err)
 	}
