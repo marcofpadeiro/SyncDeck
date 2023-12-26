@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func Upload(zipData *bytes.Buffer, endpoint, unit_id string) error {
+func UploadAPI(zipData *bytes.Buffer, endpoint, unit_id string) error {
 	var requestBody bytes.Buffer
 	multipartWriter := multipart.NewWriter(&requestBody)
 
@@ -43,7 +43,7 @@ func Upload(zipData *bytes.Buffer, endpoint, unit_id string) error {
 	return nil
 }
 
-func Download(endpoint, path string) error {
+func DownloadAPI(endpoint, path string) error {
 	resp, err := http.Get(endpoint)
 	if err != nil {
 		return err

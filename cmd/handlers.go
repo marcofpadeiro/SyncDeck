@@ -4,12 +4,18 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/marcofpadeiro/SyncDeck/utils"
 )
 
-func HandleAdd(config Config, unit_id string, path string) {
+func HandleSubscribe(config Config, args []string) {
+	if len(args) < 2 {
+		fmt.Println("Usage:     ./syncdeck subscribe <unit> <path>")
+		return
+	}
+	unit_id := args[0]
+	path := args[1]
+
 	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
 	if err != nil {
 		log.Panic(err)
@@ -19,51 +25,46 @@ func HandleAdd(config Config, unit_id string, path string) {
 		log.Panic(err)
 	}
 
-	exists := utils.CheckExists(local_units, unit_id)
-	if exists != -1 {
+	index := utils.CheckExists(local_units, unit_id)
+	if index != -1 {
 		fmt.Println(unit_id + " already exists in your units!")
 		return
 	}
 
-	exists = utils.CheckExists(remote_units, unit_id)
-	if exists == -1 {
+	index = utils.CheckExists(remote_units, unit_id)
+	if index == -1 {
 		fmt.Println(unit_id + " does not exist in remote units!")
 		return
 	}
 
-	URL := "http://" + config.IP + ":" + config.Port + "/download/" + unit_id
+	remote := remote_units[index]
 
-	zipPath := filepath.Join("/tmp", unit_id+".zip")
-	err = utils.Download(URL, zipPath)
-	if err != nil {
-		log.Panic(err.Error())
-	}
+	download(config, unit_id, path)
 
-	// Unzip the downloaded file
-	err = utils.Extract(zipPath, path)
-	if err != nil {
-		fmt.Println("Error extracting file:", err)
-		return
-	}
+	remote.Path = path
 
-	remote_units[exists].Path = path
-
-	err = utils.AddUnit(config.Units_metadata, remote_units[exists])
+	err = utils.AddUnit(config.Units_metadata, remote)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	fmt.Println("Unit " + unit_id + " added successfully!")
+	fmt.Println("Unit " + unit_id + " subscribed successfully!")
 }
 
-func HandleDel(config Config, unit_id string) {
+func HandleDel(config Config, args []string) {
+	if len(args) < 1 {
+		fmt.Println("Usage:     ./syncdeck del <unit>")
+		return
+	}
+	unit_id := args[0]
+
 	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	exists := utils.CheckExists(local_units, unit_id)
-	if exists == -1 {
+	index := utils.CheckExists(local_units, unit_id)
+	if index == -1 {
 		fmt.Println(unit_id + " does not exist in local units!")
 		return
 	}
@@ -76,22 +77,28 @@ func HandleDel(config Config, unit_id string) {
 	fmt.Println("Unit " + unit_id + " deleted successfully!")
 }
 
-func HandleRemove(config Config, unit_id string) {
+func HandleRemove(config Config, args []string) {
+	if len(args) < 1 {
+		fmt.Println("Usage:     ./syncdeck rm <unit>")
+		return
+	}
+	unit_id := args[0]
+
 	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	exists := utils.CheckExists(local_units, unit_id)
-	if exists == -1 {
+	index := utils.CheckExists(local_units, unit_id)
+	if index == -1 {
 		fmt.Println(unit_id + " does not exist in local units!")
 		return
 	}
 
-	unit := local_units[exists]
+	local := local_units[index]
 
 	var user_input string
-	fmt.Printf("Are you sure you want to delete all files from %s? [y/N] ", unit.Path)
+	fmt.Printf("Are you sure you want to delete all files from %s? [y/N] ", local.Path)
 
 	fmt.Scanln(&user_input)
 
@@ -99,11 +106,22 @@ func HandleRemove(config Config, unit_id string) {
 		return
 	}
 
-	HandleDel(config, unit_id)
-	os.RemoveAll(unit.Path)
+	err = utils.DeleteUnit(config.Units_metadata, unit_id)
+	if err != nil {
+		log.Panic(err)
+	}
+	os.RemoveAll(local.Path)
+	fmt.Println("Unit " + unit_id + " deleted successfully!")
 }
 
-func HandleAddRemote(config Config, unit_id string, folder_path string) {
+func HandleAddRemote(config Config, args []string) {
+	if len(args) < 2 {
+		fmt.Println("Usage:     ./syncdeck add-remote <unit> <path>")
+		return
+	}
+	unit_id := args[0]
+	folder_path := args[1]
+
 	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
 	if err != nil {
 		log.Panic(err)
@@ -114,24 +132,14 @@ func HandleAddRemote(config Config, unit_id string, folder_path string) {
 		return
 	}
 
-	URL := "http://" + config.IP + ":" + config.Port + "/upload"
-
-	zipData, err := utils.Compress(folder_path)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	err = utils.Upload(zipData, URL, unit_id)
-	if err != nil {
-		log.Panic(err)
-	}
+	upload(config, unit_id, folder_path)
 
 	utils.AddUnit(config.Units_metadata, utils.Unit{ID: unit_id, Version: 1, Path: folder_path})
 	fmt.Println("Successfully added " + unit_id + " to remote")
 }
 
-func HandleList(config Config) {
-	units, err := utils.GetUnits(config.Units_metadata)
+func HandleList(config Config, args []string) {
+	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -141,17 +149,23 @@ func HandleList(config Config) {
 	}
 
 	for _, unit := range remote_units {
-		exists := utils.CheckExists(units, unit.ID)
+		index := utils.CheckExists(local_units, unit.ID)
+
 		var local utils.Unit
-		if exists != -1 {
-			local = units[exists]
+		if index != -1 {
+			local = local_units[index]
 		}
 		fmt.Printf("%s v%d|v%d \t-> %s\n", unit.ID, local.Version, unit.Version, local.Path)
 	}
 }
 
-func HandleFetch(config Config, unit_id string) {
-	URL := "http://" + config.IP + ":" + config.Port + "/download/" + unit_id
+func HandleFetch(config Config, args []string) {
+	if len(args) < 1 {
+		fmt.Println("Usage:     ./syncdeck fetch <unit>")
+		return
+	}
+	unit_id := args[0]
+
 	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
 		log.Panic(err)
@@ -178,58 +192,43 @@ func HandleFetch(config Config, unit_id string) {
 	remote := remote_units[index]
 
 	if local.Version < remote.Version {
-		path := filepath.Join("/tmp", local.ID+".zip")
-		err = utils.Download(URL, path)
-		if err != nil {
-			log.Panic(err.Error())
-		}
-		fmt.Println("Successfully downloaded to " + path)
-
-		// Unzip the downloaded file
-		os.RemoveAll(local.Path)
-		err = utils.Extract(path, local.Path)
-		if err != nil {
-			fmt.Println("Error extracting file:", err)
-			return
-		}
-		fmt.Println("File extracted successfully")
-
+		fmt.Printf("%s is outdated! (v%d->v%d)\n", local.ID, local.Version, remote.Version)
+		download(config, local.ID, local.Path)
 		utils.UpdateUnit(config.Units_metadata, local, remote.Version)
-		fmt.Println("Updated metadata file")
-
 	} else if local.Version > remote.Version {
-		HandleUpload(config, unit_id)
+		fmt.Printf("%s is ahead of remote! (v%d->v%d)\n", local.ID, local.Version, remote.Version)
+		HandleUpload(config, args)
 	}
+	fmt.Printf("%s is up-to-date! (v%d)\n", local.ID, local.Version)
 }
 
-func HandleUpload(config Config, unit_id string) {
+func HandleUpload(config Config, args []string) {
+	if len(args) > 1 {
+		fmt.Println("Usage:     ./syncdeck upload <unit>")
+		return
+	}
+	unit_id := args[0]
+
 	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	exists := utils.CheckExists(local_units, unit_id)
-	if exists == -1 {
+	index := utils.CheckExists(local_units, unit_id)
+	if index == -1 {
 		fmt.Println("You are not subscribed to that unit!")
 		return
 	}
 
-	URL := "http://" + config.IP + ":" + config.Port + "/upload"
+    local := local_units[index]
 
-	zipData, err := utils.Compress(local_units[exists].Path)
-	if err != nil {
-		log.Panic(err)
-	}
+	upload(config, unit_id, local.Path)
+	utils.UpdateUnit(config.Units_metadata, local, local.Version+1)
 
-	err = utils.Upload(zipData, URL, unit_id)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	fmt.Println("Successfully uploaded " + unit_id + " to remote")
+	fmt.Printf("Successfully uploaded %s v%d to remote", local.ID, local.Version+1)
 }
 
-func HandleRefresh(config Config) {
+func HandleRefresh(config Config, args []string) {
 	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
 		log.Panic(err)
@@ -246,25 +245,12 @@ func HandleRefresh(config Config) {
 		}
 		remote := remote_units[index]
 		if local.Version < remote.Version {
-			fmt.Printf("%s is outdated! (v%d->v%d)\n", local.ID, local.Version, remote.Version)
-			URL := "http://" + config.IP + ":" + config.Port + "/download/" + local.ID
-			path := filepath.Join("/tmp", local.ID+".zip")
-			err = utils.Download(URL, path)
-			if err != nil {
-				log.Panic(err.Error())
-			}
-
-			os.RemoveAll(local.Path)
-			err = utils.Extract(path, local.Path)
-			if err != nil {
-				fmt.Println("Error extracting file:", err)
-				return
-			}
-
+			fmt.Printf("%s is outdated! (v%d->v%d)   ::Updating...\n", local.ID, local.Version, remote.Version)
+			download(config, local.ID, local.Path)
 			utils.UpdateUnit(config.Units_metadata, local, remote.Version)
 		} else if local.Version > remote.Version {
-			HandleUpload(config, local.ID)
-			fmt.Printf("%s is ahead of server! (v%d->v%d)\n", local.ID, local.Version, remote.Version)
+			HandleUpload(config, []string{local.ID})
+			fmt.Printf("%s is ahead of server! (v%d->v%d)   ::Uploading...\n", local.ID, local.Version, remote.Version)
 		} else {
 			fmt.Printf("%s is up to date! (v%d)\n", local.ID, local.Version)
 		}
