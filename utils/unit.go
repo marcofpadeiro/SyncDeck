@@ -124,6 +124,27 @@ func UpdateUnit(json_path string, unit Unit, version int) error {
 	return nil
 }
 
+func EditUnit(json_path string, unit Unit, path string) error {
+	units, err := UnmarshallJson(json_path)
+	if err != nil {
+		return err
+	}
+
+	for i, u := range units {
+		if u.ID == unit.ID {
+			units[i].Path = path
+			break
+		}
+	}
+
+	err = MarshallJson(json_path, units)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetRemoteUnits(ip, port string) ([]Unit, error) {
 	var units []Unit
 

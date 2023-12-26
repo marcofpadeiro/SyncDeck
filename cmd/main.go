@@ -22,6 +22,7 @@ func main() {
 		"del":        HandleDel,
 		"rm":         HandleRemove,
 		"add-remote": HandleAddRemote,
+		"edit":       HandleEdit,
 		"list":       HandleList,
 		"fetch":      HandleFetch,
 		"upload":     HandleUpload,
@@ -49,6 +50,7 @@ func help() {
 	fmt.Println("    add-remote <unit> <path>         add remote unit")
 	fmt.Println("    del <unit>                       remove local unit")
 	fmt.Println("    rm  <unit>                       remove local unit and its files (DANGEROUS!)")
+	fmt.Println("    edit <unit> <new-path>           edit the path of a unit")
 	fmt.Println("    list                             list local units")
 	fmt.Println("    list-remote                      list remote units")
 	fmt.Println("    fetch <unit>                     fetch unit")

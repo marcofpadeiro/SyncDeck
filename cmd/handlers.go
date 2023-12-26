@@ -138,6 +138,35 @@ func HandleAddRemote(config Config, args []string) {
 	fmt.Println("Successfully added " + unit_id + " to remote")
 }
 
+func HandleEdit(config Config, args []string) {
+	if len(args) < 2 {
+		fmt.Println("Usage:     ./syncdeck edit <unit> <path>")
+		return
+	}
+	unit_id := args[0]
+	path := args[1]
+
+	local_units, err := utils.GetUnits(config.Units_metadata)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	index := utils.CheckExists(local_units, unit_id)
+	if index == -1 {
+		fmt.Println(unit_id + " does not exist in your units!")
+		return
+	}
+
+	old_path := local_units[index].Path
+
+	err = utils.EditUnit(config.Units_metadata, local_units[index], path)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Printf("Unit %s edited successfully! %s -> %s\n", unit_id, old_path, path)
+}
+
 func HandleList(config Config, args []string) {
 	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
@@ -220,7 +249,7 @@ func HandleUpload(config Config, args []string) {
 		return
 	}
 
-    local := local_units[index]
+	local := local_units[index]
 
 	upload(config, unit_id, local.Path)
 	utils.UpdateUnit(config.Units_metadata, local, local.Version+1)
