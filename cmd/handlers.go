@@ -31,7 +31,20 @@ func HandleAdd(config Config, unit_id string, path string) {
 		return
 	}
 
-	//api call to get files
+	URL := "http://" + config.IP + ":" + config.Port + "/download/" + unit_id
+
+	zipPath := filepath.Join("/tmp", unit_id+".zip")
+	err = helpers.Download(URL, zipPath)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+
+	// Unzip the downloaded file
+	err = helpers.UnzipFolder(zipPath, path)
+	if err != nil {
+		fmt.Println("Error extracting file:", err)
+		return
+	}
 
 	remote_units[exists].Path = path
 
