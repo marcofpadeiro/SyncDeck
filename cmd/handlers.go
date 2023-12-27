@@ -39,9 +39,8 @@ func HandleSubscribe(config Config, args []string) {
 
 	remote := remote_units[index]
 
-	download(config, remote.ID, path, 0)
-
 	remote.Path = path
+	remote.Version--
 
 	err = utils.AddUnit(config.Units_metadata, remote)
 	if err != nil {
@@ -284,6 +283,15 @@ func HandleUpload(config Config, args []string) {
 		log.Panic(err)
 	}
 
+	if unit_id == "all" {
+		for _, unit := range local_units {
+			upload(config, unit.ID, unit.Path)
+			version, _ := utils.GetUnitVersion(config.IP, config.Port, config.Api_key, unit.ID)
+			utils.UpdateUnit(config.Units_metadata, unit, version)
+			return
+		}
+	}
+
 	index := utils.CheckExists(local_units, unit_id)
 	if index == -1 {
 		fmt.Println("You are not subscribed to that unit!")
@@ -293,7 +301,8 @@ func HandleUpload(config Config, args []string) {
 	local := local_units[index]
 
 	upload(config, unit_id, local.Path)
-	utils.UpdateUnit(config.Units_metadata, local, local.Version+1)
+	version, _ := utils.GetUnitVersion(config.IP, config.Port, config.Api_key, local.ID)
+	utils.UpdateUnit(config.Units_metadata, local, version)
 
 	fmt.Printf("Successfully uploaded %s v%d to remote\n", local.ID, local.Version+1)
 }
