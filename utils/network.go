@@ -106,9 +106,13 @@ func GetRemoteUnits(ip, port, api_key string) ([]Unit, error) {
 	return units, nil
 }
 
+type Payload struct {
+	Version int
+}
+
 func GetUnitVersion(ip, port, api_key string, unit_id string) (int, error) {
-	var version int
-	endpoint := "http://" + ip + ":" + port + "/version" + unit_id
+	var payload Payload
+	endpoint := "http://" + ip + ":" + port + "/version/" + unit_id
 
 	request, err := http.NewRequest("GET", endpoint, nil)
 	request.Header.Set("Authorization", api_key)
@@ -116,19 +120,19 @@ func GetUnitVersion(ip, port, api_key string, unit_id string) (int, error) {
 	client := http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		return version, errors.New("Error making GET request")
+		return payload.Version, errors.New("Error making GET request")
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return version, errors.New("Error reading response body:" + err.Error())
+		return payload.Version, errors.New("Error reading response body:" + err.Error())
 	}
 
-	err = json.Unmarshal(body, &version)
+	err = json.Unmarshal(body, &payload)
 	if err != nil {
-		return version, errors.New("Error unmarshaling JSON:" + err.Error())
+		return payload.Version, errors.New("Error unmarshaling JSON:" + err.Error())
 	}
 
-	return version, nil
+	return payload.Version, nil
 }

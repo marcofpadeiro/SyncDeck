@@ -286,10 +286,14 @@ func HandleUpload(config Config, args []string) {
 	if unit_id == "all" {
 		for _, unit := range local_units {
 			upload(config, unit.ID, unit.Path)
-			version, _ := utils.GetUnitVersion(config.IP, config.Port, config.Api_key, unit.ID)
+			version, err := utils.GetUnitVersion(config.IP, config.Port, config.Api_key, unit.ID)
+			if err != nil {
+				log.Panic(err.Error())
+			}
 			utils.UpdateUnit(config.Units_metadata, unit, version)
-			return
+			fmt.Printf("%s has been uploaded successfully (v%d)\n", unit.ID, version)
 		}
+		return
 	}
 
 	index := utils.CheckExists(local_units, unit_id)
