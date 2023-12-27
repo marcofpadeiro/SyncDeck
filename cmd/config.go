@@ -12,6 +12,8 @@ type Config struct {
 	Port           string `json:"server_port"`
 	Units_metadata string `json:"unit_metadata"`
 	Api_key        string
+	Backup_Path    string
+	Backup_Size    int
 }
 
 func ReadConfig() (Config, error) {
@@ -28,12 +30,6 @@ func ReadConfig() (Config, error) {
 	err = json.Unmarshal(content, &payload)
 	if err != nil {
 		return payload, errors.New("Error during Unmarshal.")
-	}
-
-	if payload.Units_metadata == "" {
-		payload.Units_metadata = filepath.Join(home, ".config/syncdeck/units.json")
-		json.Marshal(payload)
-		os.WriteFile(config_file, content, 0644)
 	}
 
 	return payload, nil

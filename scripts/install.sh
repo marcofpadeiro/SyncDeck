@@ -4,8 +4,10 @@
 default_config='{
     "server_ip": "127.0.0.1",
     "server_port": "5137",
-    "unit_metadata": "'"$HOME"'/.config/syncdeck/units.json",
-    "api_key": ""
+    "unit_metadata": "'$HOME'/.config/syncdeck/units.json",
+    "api_key": "",
+    "backup_path": "'$HOME'/.cache/syncdeck",
+    "backup_size": 0 
 }
 '
 

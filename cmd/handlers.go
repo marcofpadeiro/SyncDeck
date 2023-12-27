@@ -39,7 +39,7 @@ func HandleSubscribe(config Config, args []string) {
 
 	remote := remote_units[index]
 
-	download(config, unit_id, path)
+	download(config, remote.ID, path, 0)
 
 	remote.Path = path
 
@@ -263,13 +263,13 @@ func HandleFetch(config Config, args []string) {
 
 	if local.Version < remote.Version {
 		fmt.Printf("%s is outdated! (v%d->v%d)\n", local.ID, local.Version, remote.Version)
-		download(config, local.ID, local.Path)
+		download(config, local.ID, local.Path, local.Version)
 		utils.UpdateUnit(config.Units_metadata, local, remote.Version)
 	} else if local.Version > remote.Version {
 		fmt.Printf("%s is ahead of remote! (v%d->v%d)\n", local.ID, local.Version, remote.Version)
 		HandleUpload(config, args)
 	}
-	fmt.Printf("%s is up-to-date! (v%d)\n", local.ID, local.Version)
+	fmt.Printf("%s is up-to-date! (v%d)\n", local.ID, remote.Version)
 }
 
 func HandleUpload(config Config, args []string) {
@@ -316,7 +316,7 @@ func HandleRefresh(config Config, args []string) {
 		remote := remote_units[index]
 		if local.Version < remote.Version {
 			fmt.Printf("%s is outdated! (v%d->v%d)   ::Updating...\n", local.ID, local.Version, remote.Version)
-			download(config, local.ID, local.Path)
+			download(config, local.ID, local.Path, local.Version)
 			utils.UpdateUnit(config.Units_metadata, local, remote.Version)
 		} else if local.Version > remote.Version {
 			HandleUpload(config, []string{local.ID})

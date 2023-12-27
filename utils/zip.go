@@ -77,7 +77,6 @@ func Extract(zipPath, destPath string) error {
 		if err != nil {
 			return err
 		}
-		defer rc.Close()
 
 		filePath := filepath.Join(destPath, file.Name)
 
@@ -87,15 +86,18 @@ func Extract(zipPath, destPath string) error {
 			os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
 			outFile, err := os.Create(filePath)
 			if err != nil {
+				rc.Close()
 				return err
 			}
-			defer outFile.Close()
 
 			_, err = io.Copy(outFile, rc)
+			outFile.Close()
+			rc.Close()
 			if err != nil {
 				return err
 			}
 		}
 	}
+
 	return nil
 }

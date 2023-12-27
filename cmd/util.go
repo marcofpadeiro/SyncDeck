@@ -7,7 +7,7 @@ import (
 	"github.com/marcofpadeiro/SyncDeck/utils"
 )
 
-func download(config Config, unit_id, path string) {
+func download(config Config, unit_id, path string, version int) {
 	URL := "http://" + config.IP + ":" + config.Port + "/download/" + unit_id
 
 	zipPath := filepath.Join("/tmp", unit_id+".zip")
@@ -17,6 +17,12 @@ func download(config Config, unit_id, path string) {
 	}
 
 	// Unzip the downloaded file
+	err = utils.BackupUnit(path, config.Backup_Path, unit_id, version, config.Backup_Size)
+
+	if err != nil {
+		log.Println(err)
+	}
+
 	err = utils.Extract(zipPath, path)
 	if err != nil {
 		log.Println("Error extracting file:", err)

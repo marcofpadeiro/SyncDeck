@@ -9,7 +9,7 @@ import (
 func main() {
 	config, err := ReadConfig()
 	if err != nil {
-		log.Panic("Error reading config")
+		log.Panic("Error reading config: " + err.Error())
 	}
 
 	if len(os.Args) < 2 {
