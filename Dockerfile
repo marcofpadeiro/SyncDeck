@@ -8,7 +8,7 @@ WORKDIR /syncdeck
 COPY . .
 
 RUN mkdir -p $HOME/.config/syncdeck
-RUN cp configs/server.json $HOME/.config/syncdeck/server.json 
+COPY configs/server.json /root/.config/syncdeck/server.json 
 
 RUN mkdir $HOME/syncdeck
 RUN echo "[]" > $HOME/syncdeck/metadata.json

@@ -27,6 +27,8 @@ func main() {
 		c.Next()
 	})
 
+	router.Use(APIKeyMiddleware(config))
+
 	router.POST("/upload", upload)
 	router.GET("/download/:id", download)
 	router.GET("/version/:id", getVersion)

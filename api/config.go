@@ -12,6 +12,7 @@ type Config struct {
 	History_size int
 	IP           string `json:"server_ip"`
 	Port         string `json:"server_port"`
+    Api_Key      string
 }
 
 func ReadConfig() (Config, error) {
