@@ -168,7 +168,6 @@ func HandleEdit(config Config, args []string) {
 }
 
 func HandleList(config Config, args []string) {
-	println(config.Units_metadata)
 	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
 		log.Panic(err)

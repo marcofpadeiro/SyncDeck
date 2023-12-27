@@ -9,5 +9,7 @@ cd ../api
 go build 
 sudo mv api /usr/bin/syncdeck-api
 
+mkdir -p $HOME/syncdeck
+echo "[]" > $HOME/syncdeck/metadata.json
 echo ":: Installation complete, to start api run 'syncdeck-api'"
 cd -
