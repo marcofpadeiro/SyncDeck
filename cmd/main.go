@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
+	"time"
 )
 
 func main() {
@@ -14,6 +16,13 @@ func main() {
 
 	if len(os.Args) < 2 {
 		help()
+		return
+	}
+
+	timeout := time.Duration(1 * time.Second)
+	_, err = net.DialTimeout("tcp", config.IP+":"+config.Port, timeout)
+	if err != nil {
+		fmt.Println("No connection to the server ", config.IP+":"+config.Port)
 		return
 	}
 
