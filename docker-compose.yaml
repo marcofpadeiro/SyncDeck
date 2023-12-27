@@ -1,0 +1,9 @@
+version: '1'
+
+services:
+  syncdeck:
+    build: .
+    ports:
+      - "5137:8080"
+    restart: always
+
