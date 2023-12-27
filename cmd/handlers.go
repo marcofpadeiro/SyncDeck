@@ -16,7 +16,7 @@ func HandleSubscribe(config Config, args []string) {
 	unit_id := args[0]
 	path := args[1]
 
-	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
+	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port, config.Api_key)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -62,6 +62,26 @@ func HandleDel(config Config, args []string) {
 	if err != nil {
 		log.Panic(err)
 	}
+	if unit_id == "all" {
+		for _, unit := range local_units {
+			var user_input string
+			fmt.Printf("Are you sure you want to delete all files from %s? [y/N] ", unit.Path)
+
+			fmt.Scanln(&user_input)
+
+			if user_input != "y" && user_input != "Y" {
+				return
+			}
+
+			err = utils.DeleteUnit(config.Units_metadata, unit.ID)
+			if err != nil {
+				log.Panic(err)
+			}
+			os.RemoveAll(unit.Path)
+			fmt.Println("Unit " + unit.ID + " deleted successfully!")
+			return
+		}
+	}
 
 	index := utils.CheckExists(local_units, unit_id)
 	if index == -1 {
@@ -87,6 +107,27 @@ func HandleRemove(config Config, args []string) {
 	local_units, err := utils.GetUnits(config.Units_metadata)
 	if err != nil {
 		log.Panic(err)
+	}
+
+	if unit_id == "all" {
+		for _, unit := range local_units {
+			var user_input string
+			fmt.Printf("Are you sure you want to delete all files from %s? [y/N] ", unit.Path)
+
+			fmt.Scanln(&user_input)
+
+			if user_input != "y" && user_input != "Y" {
+				return
+			}
+
+			err = utils.DeleteUnit(config.Units_metadata, unit.ID)
+			if err != nil {
+				log.Panic(err)
+			}
+			os.RemoveAll(unit.Path)
+			fmt.Println("Unit " + unit.ID + " deleted successfully!")
+			return
+		}
 	}
 
 	index := utils.CheckExists(local_units, unit_id)
@@ -122,7 +163,7 @@ func HandleAddRemote(config Config, args []string) {
 	unit_id := args[0]
 	folder_path := args[1]
 
-	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
+	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port, config.Api_key)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -172,7 +213,7 @@ func HandleList(config Config, args []string) {
 	if err != nil {
 		log.Panic(err)
 	}
-	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
+	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port, config.Api_key)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -199,7 +240,7 @@ func HandleFetch(config Config, args []string) {
 	if err != nil {
 		log.Panic(err)
 	}
-	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
+	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port, config.Api_key)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -254,7 +295,7 @@ func HandleUpload(config Config, args []string) {
 	upload(config, unit_id, local.Path)
 	utils.UpdateUnit(config.Units_metadata, local, local.Version+1)
 
-	fmt.Printf("Successfully uploaded %s v%d to remote", local.ID, local.Version+1)
+	fmt.Printf("Successfully uploaded %s v%d to remote\n", local.ID, local.Version+1)
 }
 
 func HandleRefresh(config Config, args []string) {
@@ -262,7 +303,7 @@ func HandleRefresh(config Config, args []string) {
 	if err != nil {
 		log.Panic(err)
 	}
-	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port)
+	remote_units, err := utils.GetRemoteUnits(config.IP, config.Port, config.Api_key)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -280,8 +321,7 @@ func HandleRefresh(config Config, args []string) {
 		} else if local.Version > remote.Version {
 			HandleUpload(config, []string{local.ID})
 			fmt.Printf("%s is ahead of server! (v%d->v%d)   ::Uploading...\n", local.ID, local.Version, remote.Version)
-		} else {
-			fmt.Printf("%s is up to date! (v%d)\n", local.ID, local.Version)
 		}
+		fmt.Printf("%s is up to date! (v%d)\n", local.ID, local.Version)
 	}
 }

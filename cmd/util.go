@@ -11,7 +11,7 @@ func download(config Config, unit_id, path string) {
 	URL := "http://" + config.IP + ":" + config.Port + "/download/" + unit_id
 
 	zipPath := filepath.Join("/tmp", unit_id+".zip")
-	err := utils.DownloadAPI(URL, zipPath)
+	err := utils.DownloadAPI(URL, zipPath, config.Api_key)
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -31,7 +31,7 @@ func upload(config Config, unit_id, path string) {
 		log.Panic(err)
 	}
 
-	err = utils.UploadAPI(zipData, URL, unit_id)
+	err = utils.UploadAPI(zipData, URL, unit_id, config.Api_key)
 	if err != nil {
 		log.Panic(err)
 	}

@@ -11,6 +11,7 @@ type Config struct {
 	IP             string `json:"server_ip"`
 	Port           string `json:"server_port"`
 	Units_metadata string `json:"unit_metadata"`
+	Api_key        string
 }
 
 func ReadConfig() (Config, error) {

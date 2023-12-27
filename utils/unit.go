@@ -3,8 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
 	"os"
 )
 
@@ -143,53 +141,6 @@ func EditUnit(json_path string, unit Unit, path string) error {
 	}
 
 	return nil
-}
-
-func GetRemoteUnits(ip, port string) ([]Unit, error) {
-	var units []Unit
-
-	url := "http://" + ip + ":" + port + "/units"
-
-	response, err := http.Get(url)
-	if err != nil {
-		return units, errors.New("Error making GET request")
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return units, errors.New("Error reading response body:" + err.Error())
-	}
-
-	err = json.Unmarshal(body, &units)
-	if err != nil {
-		return units, errors.New("Error unmarshaling JSON:" + err.Error())
-	}
-
-	return units, nil
-}
-
-func GetUnitVersion(ip, port string, unit_id string) (int, error) {
-	url := "http://" + ip + ":" + port + "/version" + unit_id
-	var version int
-
-	response, err := http.Get(url)
-	if err != nil {
-		return version, errors.New("Error making GET request")
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return version, errors.New("Error reading response body:" + err.Error())
-	}
-
-	err = json.Unmarshal(body, &version)
-	if err != nil {
-		return version, errors.New("Error unmarshaling JSON:" + err.Error())
-	}
-
-	return version, nil
 }
 
 func CheckExists(units []Unit, unit_id string) int {
