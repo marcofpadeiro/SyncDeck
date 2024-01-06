@@ -2,8 +2,13 @@ version: '1'
 
 services:
   syncdeck:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5137:8080"
+      - "${PORT}:8080"
     restart: always
-
+    env_file:
+      - .env
+    volumes:
+      - ${UPLOAD_LOCATION}:/syncdeck

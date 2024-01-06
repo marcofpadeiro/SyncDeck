@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"os"
-	"path/filepath"
+	"strconv"
 )
 
 type Config struct {
@@ -16,21 +14,14 @@ type Config struct {
 }
 
 func ReadConfig() (Config, error) {
-	var payload Config
-
-	home, _ := os.UserHomeDir()
-	content, err := os.ReadFile(filepath.Join(home, ".config/syncdeck/server.json"))
-
-	if err != nil {
-		return payload, errors.New("Error opening config file.")
-	}
-
-	os.MkdirAll(payload.Save_path, os.ModePerm)
-
-	err = json.Unmarshal(content, &payload)
-	if err != nil {
-		return payload, errors.New("Error during Unmarshal.")
-	}
+    backup_size, _ := strconv.Atoi(os.Getenv("BACKUP_SIZE"))
+    payload := Config {
+        Save_path: "/syncdeck_data",
+        IP: "0.0.0.0",
+        Port: "8080",
+        History_size: backup_size,
+        Api_Key: os.Getenv("API_KEY"),
+    }
 
 	return payload, nil
 }

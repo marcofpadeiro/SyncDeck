@@ -7,21 +7,23 @@ WORKDIR /syncdeck
 # Copy the entire project to the container
 COPY . .
 
-RUN mkdir -p $HOME/.config/syncdeck
-COPY templates/server.json /root/.config/syncdeck/server.json 
-
-RUN mkdir $HOME/syncdeck
-RUN echo "[]" > $HOME/syncdeck/metadata.json
+WORKDIR /syncdeck_data
+RUN echo "[]" > metadata.json
 
 WORKDIR /syncdeck/api
-# Download dependencies
+
+ENV GOPROXY=https://goproxy.io,direct
+
 RUN go mod download
 
 # Build the Go application
-RUN go build -o main .
+RUN go build
 
+RUN mv api /
+
+WORKDIR /
 # Expose the port on which your Go API runs
-EXPOSE 5137
+EXPOSE 8080
 
 # Command to run the application
-CMD ["./main"]
+CMD ["./api"]
